@@ -1,0 +1,1240 @@
+{
+  "name": "WhatsApp Recruitment Automation with Google Sheets Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "phone_number",
+              "value": "={{ $json.entry[0].changes[0].value.messages[0].from }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "message_text",
+              "value": "={{ $json.entry[0].changes[0].value.messages[0].text.body }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "message_type",
+              "value": "={{ $json.entry[0].changes[0].value.messages[0].type }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "timestamp",
+              "value": "={{ $json.entry[0].changes[0].value.messages[0].timestamp }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d4af14cd-60ec-4988-b9a7-c7d9c1df9b56",
+      "name": "Extract User Phone",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        1616
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "1a314cbf-095b-4329-9244-7c1418f1261a",
+      "name": "Fetch User Jobs",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        704,
+        1616
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "A0kYjKAwdcs2GQJn",
+          "name": "shubham"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9f5bef7f-07de-435f-8220-812eb9926b6b",
+      "name": "Jobs Available?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        1616
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-webhook",
+        "options": {}
+      },
+      "id": "1f92e29c-77dd-424b-ab3c-394418a84c7b",
+      "name": "WhatsApp Message Received",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        256,
+        1616
+      ],
+      "webhookId": "f1857dea-1cc0-4e00-93bb-58a68e2fabad"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/<__PLACEHOLDER_VALUE__phone_number_id__>/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "metaApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"={{ $('Extract User Phone').item.json.phone_number }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"Sorry, there are no job opportunities available for you at the moment. We'll notify you when new positions match your profile.\"\n  }\n}",
+        "options": {}
+      },
+      "id": "f2282b22-d4ed-4d3d-804f-bd12b7712464",
+      "name": "Send No Jobs Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1152,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "employer_name",
+              "value": "={{ $json[0].employer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "job_intro",
+              "value": "={{ $json[0].job_intro }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "job_description",
+              "value": "={{ $json[0].job_description }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "job_benefits",
+              "value": "={{ $json[0].job_benefits }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "job_id",
+              "value": "={{ $json[0].job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "phone_number",
+              "value": "={{ $('Extract User Phone').item.json.phone_number }}",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "current_job_index",
+              "value": 0,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4ba15d8b-0a1c-424f-bff6-a971ce920488",
+      "name": "Prepare Job Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1152,
+        1712
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/<__PLACEHOLDER_VALUE__phone_number_id__>/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "metaApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"={{ $json.phone_number }}\",\n  \"type\": \"interactive\",\n  \"interactive\": {\n    \"type\": \"button\",\n    \"body\": {\n      \"text\": \"🏢 *{{ $json.employer_name }}*\\n\\n{{ $json.job_intro }}\"\n    },\n    \"action\": {\n      \"buttons\": [\n        {\n          \"type\": \"reply\",\n          \"reply\": {\n            \"id\": \"interested_{{ $json.job_id }}\",\n            \"title\": \"Interested\"\n          }\n        },\n        {\n          \"type\": \"reply\",\n          \"reply\": {\n            \"id\": \"show_more_{{ $json.job_id }}\",\n            \"title\": \"Show More\"\n          }\n        },\n        {\n          \"type\": \"reply\",\n          \"reply\": {\n            \"id\": \"next_job\",\n            \"title\": \"Next Job\"\n          }\n        }\n      ]\n    }\n  }\n}",
+        "options": {}
+      },
+      "id": "5065fa87-409e-4015-8221-888cb8d5c844",
+      "name": "Send Job Offer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1376,
+        1712
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-response",
+        "options": {}
+      },
+      "id": "2757ad04-bde3-4538-bdc8-c708b1fe748e",
+      "name": "User Response Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        256,
+        912
+      ],
+      "webhookId": "9b9a93b0-27c8-431a-b370-a69d85e23def"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "phone_number",
+              "value": "={{ $json.entry[0].changes[0].value.messages[0].from }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "button_id",
+              "value": "={{ $json.entry[0].changes[0].value.messages[0].interactive.button_reply.id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "button_title",
+              "value": "={{ $json.entry[0].changes[0].value.messages[0].interactive.button_reply.title }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "timestamp",
+              "value": "={{ $json.entry[0].changes[0].value.messages[0].timestamp }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "224dfd86-d2c4-48c8-b8f1-b704e1b6e4d4",
+      "name": "Extract Button Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.button_id }}",
+                    "rightValue": "interested",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.button_id }}",
+                    "rightValue": "show_more",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.button_id }}",
+                    "rightValue": "next_job",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "929d0a31-7577-4b74-b226-73fca48b83e8",
+      "name": "Route User Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        704,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "0a61e373-70c7-471c-88d2-00e4ad440c89",
+      "name": "Log Interest",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        928,
+        720
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "A0kYjKAwdcs2GQJn",
+          "name": "shubham"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/<__PLACEHOLDER_VALUE__phone_number_id__>/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "metaApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"={{ $('Extract Button Response').item.json.phone_number }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"📝 *Full Job Description*\\n\\n*{{ $('Fetch Job Details for Show More').item.json.employer_name }}*\\n\\n{{ $('Fetch Job Details for Show More').item.json.job_description }}\\n\\n🎁 *Benefits:*\\n{{ $('Fetch Job Details for Show More').item.json.job_benefits }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "7015f4a2-f905-4ab3-b06f-57c3626bb766",
+      "name": "Send Full Description",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        928,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "39f95a6f-bbc4-4ac9-be7f-71491b01f2dc",
+      "name": "Fetch Next Job",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        928,
+        1200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "A0kYjKAwdcs2GQJn",
+          "name": "shubham"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "5e85f862-64c9-4335-88f1-a631a9bbffec",
+      "name": "Fetch Qualification Questions",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1152,
+        720
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "A0kYjKAwdcs2GQJn",
+          "name": "shubham"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "questions",
+        "options": {}
+      },
+      "id": "5c9a382d-a0de-40d9-97ee-62dc6528303c",
+      "name": "Split Questions",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/<__PLACEHOLDER_VALUE__phone_number_id__>/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "metaApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"={{ $('Extract Button Response').item.json.phone_number }}\",\n  \"type\": \"interactive\",\n  \"interactive\": {\n    \"type\": \"button\",\n    \"body\": {\n      \"text\": \"{{ $json.question_text }}\"\n    },\n    \"action\": {\n      \"buttons\": [\n        {\n          \"type\": \"reply\",\n          \"reply\": {\n            \"id\": \"yes_{{ $json.question_id }}\",\n            \"title\": \"Yes\"\n          }\n        },\n        {\n          \"type\": \"reply\",\n          \"reply\": {\n            \"id\": \"no_{{ $json.question_id }}\",\n            \"title\": \"No\"\n          }\n        }\n      ]\n    }\n  }\n}",
+        "options": {}
+      },
+      "id": "819173fa-8468-4f70-940e-de646be786e5",
+      "name": "Send Question",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-answer",
+        "options": {}
+      },
+      "id": "0bc52fbe-e7e5-41f6-990c-bd1602fe29b0",
+      "name": "Question Answer Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        256,
+        400
+      ],
+      "webhookId": "d3075f38-6fcb-4472-b8f4-077038432887"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "phone_number",
+              "value": "={{ $json.entry[0].changes[0].value.messages[0].from }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "button_id",
+              "value": "={{ $json.entry[0].changes[0].value.messages[0].interactive.button_reply.id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "answer_value",
+              "value": "={{ $json.button_id.startsWith('yes_') ? 1 : 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "id-4",
+              "name": "question_id",
+              "value": "={{ $json.button_id.split('_')[1] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3330b7a3-58be-48fd-82a5-00cf35ade09a",
+      "name": "Extract Answer",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "f06d86b4-2bb9-44d0-a141-a61d93f481bb",
+      "name": "Update Answer",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        704,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "A0kYjKAwdcs2GQJn",
+          "name": "shubham"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('Fetch Qualification Questions').item.json.current_question_index }}",
+              "rightValue": "={{ $('Fetch Qualification Questions').item.json.total_questions }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d9c04b67-ddf7-4af1-8a6e-48f82302cd02",
+      "name": "More Questions?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "phone_number",
+              "value": "={{ $('Extract Answer').item.json.phone_number }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "qualification_status",
+              "value": "={{ $json.all_answers_yes ? 'qualified' : 'not_qualified' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "is_qualified",
+              "value": "={{ $json.all_answers_yes ? 1 : 0 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "69735783-f779-4efa-b7a3-1d597ea95eca",
+      "name": "Calculate Qualification",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1152,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "14c98f4b-7269-48dc-9b42-6ff929dfec60",
+      "name": "Update Final Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1376,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "A0kYjKAwdcs2GQJn",
+          "name": "shubham"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/<__PLACEHOLDER_VALUE__phone_number_id__>/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "metaApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"={{ $json.phone_number }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"✅ Congratulations! You've been qualified for this position. Our recruitment team will contact you shortly to discuss the next steps.\\n\\nThank you for your interest!\"\n  }\n}",
+        "options": {}
+      },
+      "id": "5b644b40-e3d1-40d6-b47b-6a35dd5e6e4c",
+      "name": "Send Qualified Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1824,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/<__PLACEHOLDER_VALUE__phone_number_id__>/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "metaApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"={{ $json.phone_number }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"Thank you for your interest in this position. Unfortunately, based on your responses, you don't meet the required qualifications at this time.\\n\\nWe encourage you to check back for other opportunities that may be a better fit.\"\n  }\n}",
+        "options": {}
+      },
+      "id": "6a7d73e9-9b70-44fb-ab9c-f592a7c40bd6",
+      "name": "Send Not Qualified Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1824,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "employer_name",
+              "value": "={{ $json[0].employer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "job_intro",
+              "value": "={{ $json[0].job_intro }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "job_description",
+              "value": "={{ $json[0].job_description }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "job_benefits",
+              "value": "={{ $json[0].job_benefits }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "job_id",
+              "value": "={{ $json[0].job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "phone_number",
+              "value": "={{ $('Extract Button Response').item.json.phone_number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fb51a4e6-3c50-4bfd-9f9e-a44003f7d79b",
+      "name": "Prepare Next Job Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1376,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/<__PLACEHOLDER_VALUE__phone_number_id__>/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "metaApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"={{ $json.phone_number }}\",\n  \"type\": \"interactive\",\n  \"interactive\": {\n    \"type\": \"button\",\n    \"body\": {\n      \"text\": \"🏢 *{{ $json.employer_name }}*\\n\\n{{ $json.job_intro }}\"\n    },\n    \"action\": {\n      \"buttons\": [\n        {\n          \"type\": \"reply\",\n          \"reply\": {\n            \"id\": \"interested_{{ $json.job_id }}\",\n            \"title\": \"Interested\"\n          }\n        },\n        {\n          \"type\": \"reply\",\n          \"reply\": {\n            \"id\": \"show_more_{{ $json.job_id }}\",\n            \"title\": \"Show More\"\n          }\n        },\n        {\n          \"type\": \"reply\",\n          \"reply\": {\n            \"id\": \"next_job\",\n            \"title\": \"Next Job\"\n          }\n        }\n      ]\n    }\n  }\n}",
+        "options": {}
+      },
+      "id": "6419a4e4-4414-4070-9dd9-faa72543de19",
+      "name": "Send Next Job Offer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.is_qualified }}",
+              "rightValue": "1",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "64097e7e-99ef-43a1-807e-f5e9692b01a0",
+      "name": "Is Qualified?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1600,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "861370bc-c7f4-4d95-91de-599ce299fd8f",
+      "name": "Next Job Available?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1152,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "989fe6bc-5db3-4509-8c56-074bdf842d96",
+      "name": "Fetch Job Details for Show More",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1152,
+        912
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "A0kYjKAwdcs2GQJn",
+          "name": "shubham"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/<__PLACEHOLDER_VALUE__phone_number_id__>/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "metaApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"={{ $('Extract Button Response').item.json.phone_number }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"You've reviewed all available job opportunities. Thank you for your interest! We'll notify you when new positions become available.\"\n  }\n}",
+        "options": {}
+      },
+      "id": "7517d488-9c4f-40f6-bb8d-bd439956cf3d",
+      "name": "Send No More Jobs Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1376,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "b088ffe3-042b-4c43-90a3-ee7bfd3827e0",
+      "name": "Log Show More Interaction",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1376,
+        912
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "A0kYjKAwdcs2GQJn",
+          "name": "shubham"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Message Received": {
+      "main": [
+        [
+          {
+            "node": "Extract User Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract User Phone": {
+      "main": [
+        [
+          {
+            "node": "Fetch User Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch User Jobs": {
+      "main": [
+        [
+          {
+            "node": "Jobs Available?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jobs Available?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Job Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send No Jobs Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Job Message": {
+      "main": [
+        [
+          {
+            "node": "Send Job Offer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Response Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Button Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Button Response": {
+      "main": [
+        [
+          {
+            "node": "Route User Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route User Action": {
+      "main": [
+        [
+          {
+            "node": "Log Interest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Full Description",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Next Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Interest": {
+      "main": [
+        [
+          {
+            "node": "Fetch Qualification Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Qualification Questions": {
+      "main": [
+        [
+          {
+            "node": "Split Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Questions": {
+      "main": [
+        [
+          {
+            "node": "Send Question",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question Answer Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Answer": {
+      "main": [
+        [
+          {
+            "node": "Update Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Answer": {
+      "main": [
+        [
+          {
+            "node": "More Questions?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "More Questions?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Calculate Qualification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Qualification": {
+      "main": [
+        [
+          {
+            "node": "Update Final Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Final Status": {
+      "main": [
+        [
+          {
+            "node": "Is Qualified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Qualified?": {
+      "main": [
+        [
+          {
+            "node": "Send Qualified Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Not Qualified Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Next Job": {
+      "main": [
+        [
+          {
+            "node": "Next Job Available?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next Job Available?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Next Job Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send No More Jobs Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Next Job Message": {
+      "main": [
+        [
+          {
+            "node": "Send Next Job Offer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Full Description": {
+      "main": [
+        [
+          {
+            "node": "Fetch Job Details for Show More",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Job Details for Show More": {
+      "main": [
+        [
+          {
+            "node": "Log Show More Interaction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7ae4a14f-446c-4aaa-b314-0bb2b3f8c7be",
+  "meta": {
+    "instanceId": "bb046fa3bfc8123cf251e45b56c8a892787f07ec8666e36eafe1a4de56fe17c6"
+  },
+  "id": "0joe11h21QTlTYnp",
+  "tags": []
+}
